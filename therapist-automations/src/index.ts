@@ -98,10 +98,10 @@ const patientSummaryConfig: ToolConfig = {
 
     // TODO: Carissa's summarizing logic here
     // Path to the Python script
-    const pythonScriptPath = 'main.py';
+    const pythonScriptPath = 'test.py';
     
     // You may want to pass the patient information to the Python script
-    const command = `poetry run python ${pythonScriptPath}`;
+    const command = "python3 main.py";
 
     // Run the Python script to get the summary
     const response = await new Promise<string>((resolve, reject) => {

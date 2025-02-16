@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "w25-scraping"
+name = "therapist-automations"
 version = "0.1.0"
 description = ""
 authors = ["nalin <74811063+lordspline@users.noreply.github.com>"]
