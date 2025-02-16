@@ -1,5 +1,4 @@
 import { z } from "zod";
-import axios from "axios";
 import { exec } from 'child_process';
 import * as fs from 'fs';
 
@@ -12,10 +11,8 @@ import {
 import {
   DainResponse,
   CardUIBuilder,
-  TableUIBuilder,
-  MapUIBuilder,
-  LayoutUIBuilder,
   ChartUIBuilder,
+  ImageCardUIBuilder
 } from "@dainprotocol/utils";
 
 
@@ -204,7 +201,7 @@ const patientSummaryConfig: ToolConfig = {
     ];
 
     // Filter data for one person (e.g., 'Renee Wong')
-    const filteredData = moodData.filter(item => item.name === 'Renee Wong').map(item => ({
+    const filteredData = moodData.filter(item => item.name === 'Helen Wong').map(item => ({
       date: item.date,
       mood_score: item.mood_score
     }));
@@ -216,7 +213,7 @@ const patientSummaryConfig: ToolConfig = {
     }));
 
     // Build the chart with ChartUIBuilder
-    const chartUI = new ChartUIBuilder()
+    const moodChartUI = new ChartUIBuilder()
       .type("line")  // Change to 'line' for the mood score graph
       .title("Helen's Mood Over The Past Week") // Title of the chart
       .chartData(chartData)  // Provide the prepared chart data
@@ -227,10 +224,43 @@ const patientSummaryConfig: ToolConfig = {
       .description("Mood score fluctuations over time for Helen") // Optional description
       .build();
 
+
+    const barChartData = [
+      { category: "Irritability", frequency: 2.5 },
+      { category: "Depression", frequency: 2 },
+      { category: "Anxiety", frequency: 2 },
+      { category: "Poor Sleep", frequency: 2.3 },
+      { category: "Lost Interest in Hobbies", frequency: 2 },
+    ];
+
+    const barChartUI = new ChartUIBuilder()
+      .type("bar")
+      .title("Frequency of Negative Emotions") 
+      .chartData(barChartData)
+      .dataKeys({           
+        x: "category",
+        y: "frequency"
+      })
+      .description("Current snapshot of Emotional Well-Being") // Optional
+      .build();
+
+    const heatmapUI = new ImageCardUIBuilder("https://i.imgur.com/JbENdaa.png")
+    .aspectRatio('wide')
+    .build();
+    
+
+    const dashboardUI = new CardUIBuilder()
+    .setRenderMode('page') // Set the render mode to 'page' for full page rendering
+    .title(`Dashboard for ${name}`)
+    .addChild(moodChartUI)
+    .addChild(barChartUI)
+    .addChild(heatmapUI)
+    .build();
+
     return new DainResponse({
       text: `Highlights of previous interactions and survey on ${name} and give suggestions on things to touch on during the session`,     // Message for the AI agent
       data: { },
-      ui: chartUI,
+      ui: dashboardUI,
     });
   },
 };
