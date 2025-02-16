@@ -9,12 +9,13 @@ import {
   TableUIBuilder,
   MapUIBuilder,
   LayoutUIBuilder,
+  ChartUIBuilder,
 } from "@dainprotocol/utils";
 
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
   name: "Send Appointment Reminder Email",
-  description: "Sends an appointment reminder email to a patient.",
+  description: "Sends an appointment reminder email to a patient.", // TODO: Write Better Description
   input: z
     .object({
       name: z.string().describe("Patient's name"),
@@ -27,7 +28,6 @@ const emailConfig: ToolConfig = {
       success: z.string().describe("Success the email successfully sent, Failed if not"),
     })
     .describe("Email sending status"),
-  pricing: { pricePerUse: 0, currency: "USD" },
   handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
     console.log(
       `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
@@ -45,6 +45,54 @@ const emailConfig: ToolConfig = {
       .title("Email Sent")
       .content(`Reminder email sent to ${name} for appointment.`)
       .build(),
+    });
+  },
+};
+
+const patientSummaryConfig: ToolConfig = {
+  id: "summarize-patient-information",
+  name: "Summarize Patient Information",
+  description: "Summarizes the information of a patient for a therapist. Use to get visualizations of the check-in survey and summary of previous appointments.",
+  input: z
+    .object({
+      name: z.string().describe("Patient's name"),
+      patientInformation: z.string().describe("Notes on the patient's previous session"),
+    })
+    .describe("Input parameters for the patient summary request"),
+  output: z
+    .object({
+      summary: z.string().describe("Summary of the patient's information and recommendataions for talking points")
+    })
+    .describe("Summary of the patient's information"),
+  handler: async ({ name, patientInformation }, agentInfo, context) => {
+    console.log(
+      `Summarizing information for ${name}. The information passed in is: ${patientInformation}`
+    );
+
+    // TODO: Carissa's summarizing logic here
+    const response = "[Placeholder Summary of patient's information]"
+
+    // TODO: Graphs
+    const chartUI = new ChartUIBuilder()
+      .type("bar")           // Mandatory: 'bar' | 'line' | 'pie'
+      .title("Monthly Sales") // Mandatory
+      .chartData([           // Mandatory
+        { month: "Jan", sales: 4000 },
+        { month: "Feb", sales: 3000 }
+      ])
+      .dataKeys({            // Mandatory
+        x: "month",
+        y: "sales"
+      })
+      .description("Sales performance over time") // Optional
+      .build();
+
+    return new DainResponse({
+      text: `Highlights of previous interactions and survey on ${name}`,     // Message for the AI agent
+      data: {
+        summary: response,
+      },
+      ui: chartUI,
     });
   },
 };
@@ -68,7 +116,7 @@ const dainService = defineDAINService({
     version: "1.0.0",
     author: "Cheryl Wu, Sean Chan, Carissa Ott, Michelle Liu",
     tags: ["Therapy", "Automation", "Summary"],
-    logo: "https://cdn-icons-png.flaticon.com/512/252/252035.png", // TODO: Update the logo URL
+    logo: "https://i.imgur.com/iTMCXIa.png", // TODO: Update the logo URL
   },
   exampleQueries: [
     {
@@ -84,7 +132,7 @@ const dainService = defineDAINService({
   identity: {
     apiKey: process.env.DAIN_API_KEY,
   },
-  tools: [emailConfig],
+  tools: [emailConfig, patientSummaryConfig],
   contexts: [userBehaviorContext],
 });
 
