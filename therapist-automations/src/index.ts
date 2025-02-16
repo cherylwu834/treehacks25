@@ -2,10 +2,11 @@ import { z } from "zod";
 import axios from "axios";
 
 import { defineDAINService, ToolConfig, ServiceContext } from "@dainprotocol/service-sdk";
-// import {
-//   DainClientAuth,
-//   DainServiceConnection,
-// } from "@dainprotocol/service-sdk/client";
+import {
+  DainClientAuth,
+  DainServiceConnection,
+} from "@dainprotocol/service-sdk/client";
+import fs from "fs";
 
 import {
   DainResponse,
@@ -17,62 +18,19 @@ import {
 } from "@dainprotocol/utils";
 
 
-// // Initialize DAIN client to connect to the web search service
-// const auth = new DainClientAuth({
-//   apiKey: process.env.DAIN_API_KEY!,
-// });
+// Initialize DAIN client to connect to the web search service
+const auth = new DainClientAuth({
+  apiKey: process.env.DAIN_API_KEY!,
+});
 
-// //initialize a connection to the web search service
-// const serviceUrl = "https://hammerhead-app-n9cx5.ondigitalocean.app";
+//initialize a connection to the web search service
+const serviceUrl = "https://hammerhead-app-n9cx5.ondigitalocean.app";
 
-// const emailService = new DainServiceConnection(
-//   serviceUrl, // this is the url of the web search service
-//   auth
-// );
+const emailService = new DainServiceConnection(
+  serviceUrl, // this is the url of the web search service
+  auth
+);
 
-
-// const emailConfig: ToolConfig = {
-//   id: "send-reminder-email",
-//   name: "Send Appointment Reminder Email",
-//   description: "Sends an appointment reminder email to a patient.", // TODO: Write Better Description
-//   input: z
-//     .object({
-//       name: z.string().describe("Patient's name"),
-//       email: z.string().email().describe("Patient's email address"),
-//       appointmentTime: z.string().datetime().describe("Appointment Date and Time"),
-//     })
-//     .describe("Input parameters for the appointment reminder email request"),
-//   output: z
-//     .object({
-//       id: z.undefined(),
-//       success: z.undefined(),
-//     }),
-//   handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
-//     console.log(
-//       `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
-//     );
-
-//     // Call the email service
-//     const response = await emailService.callTool("send-marketing-email", {
-//       fromName: "TheraMind" as string,
-//       to: email as string,
-//       subject: "Appointment Reminder for ${name}" as string,
-//       html: "Hi ${name}, <br> This is a reminder that you have an appointment at ${appointmentTime}. <br> Best, <br> TheraMind" as string,
-//     });
-
-//     // Extract the results from the response
-//     const { data, ui } = response;
-
-//     console.log(response);
-
-
-//     return new DainResponse({
-//       text: `Email sent to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
-//       data: data,
-//       ui: ui,
-//     });
-//   },
-// };
 
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
@@ -87,20 +45,32 @@ const emailConfig: ToolConfig = {
     .describe("Input parameters for the appointment reminder email request"),
   output: z
     .object({
-      emailRequest: z.string().describe("Content for the email request"),
-    })
-    .describe("Email sending status"),
+      id: z.string(),
+      success: z.boolean(),
+    }),
   handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
     console.log(
       `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
     );
 
+    // Call the email service
+    const response = await emailService.callTool("send-marketing-email", {
+      fromName: "TheraMind" as string,
+      to: [email] as Array<string>,
+      subject: `Appointment Reminder for ${name}` as string,
+      html: `Hi ${name}, <br> This is a reminder that you have an appointment at ${appointmentTime}. <br> Best, <br> TheraMind` as string,
+    });
+
+    // Extract the results from the response
+    const { data, ui } = response;
+
+    console.log(response);
+
+
     return new DainResponse({
-      text: `Please connect to the Gmail service and invoke the Gmail Send Email tool to send email to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
-      data: {
-        emailRequest: "Success",
-      },     // Structured data matching the output schema
-      ui: undefined,
+      text: `Email sent to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
+      data: data,
+      ui: ui,
     });
   },
 };
