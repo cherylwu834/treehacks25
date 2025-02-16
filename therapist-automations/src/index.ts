@@ -63,15 +63,6 @@ const apptConfig: ToolConfig = {
     const jsonApptData = fs.readFileSync(filePath, 'utf-8');
     const apptData = JSON.parse(jsonApptData);
 
-    console.log(apptData)
-
-    // // Get Patient Email and Appointment Time
-    // const emailFilePath = "emails.json";
-    // const jsonEmailData = fs.readFileSync(emailFilePath, 'utf-8');
-    // const emailData = JSON.parse(jsonEmailData);
-
-
-
     return new DainResponse({
       text: `Fetched appointment information for appointments on ${date}. Ask the user if they want to send reminder emails.`,     // Message for the AI agent
       data: { 
