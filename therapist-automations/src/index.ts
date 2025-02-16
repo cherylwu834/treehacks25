@@ -1,219 +1,93 @@
-//File: example/example-node.ts
-
 import { z } from "zod";
 import axios from "axios";
 
-import { defineDAINService, ToolConfig } from "@dainprotocol/service-sdk";
+import { defineDAINService, ToolConfig, ServiceContext } from "@dainprotocol/service-sdk";
 
 import {
+  DainResponse,
   CardUIBuilder,
   TableUIBuilder,
   MapUIBuilder,
   LayoutUIBuilder,
 } from "@dainprotocol/utils";
 
-const getWeatherEmoji = (temperature: number): string => {
-  if (temperature <= 0) return "🥶";
-  if (temperature <= 10) return "❄️";
-  if (temperature <= 20) return "⛅";
-  if (temperature <= 25) return "☀️";
-  if (temperature <= 30) return "🌞";
-  return "🔥";
-};
-
-const getWeatherConfig: ToolConfig = {
-  id: "get-weather",
-  name: "Get Weather",
-  description: "Fetches current weather for a city",
+const emailConfig: ToolConfig = {
+  id: "send-reminder-email",
+  name: "Send Appointment Reminder Email",
+  description: "Sends an appointment reminder email to a patient.",
   input: z
     .object({
-      locationName: z.string().describe("Location name"),
-      latitude: z.number().describe("Latitude coordinate"),
-      longitude: z.number().describe("Longitude coordinate"),
+      name: z.string().describe("Patient's name"),
+      email: z.string().email().describe("Patient's email address"),
+      appointmentTime: z.string().datetime().describe("Appointment Date and Time"),
     })
-    .describe("Input parameters for the weather request"),
+    .describe("Input parameters for the appointment reminder email request"),
   output: z
     .object({
-      temperature: z.number().describe("Current temperature in Celsius"),
-      windSpeed: z.number().describe("Current wind speed in km/h"),
+      success: z.string().describe("Success the email successfully sent, Failed if not"),
     })
-    .describe("Current weather information"),
+    .describe("Email sending status"),
   pricing: { pricePerUse: 0, currency: "USD" },
-  handler: async (
-    { locationName, latitude, longitude },
-    agentInfo,
-    context
-  ) => {
+  handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
     console.log(
-      `User / Agent ${agentInfo.id} requested weather at ${locationName} (${latitude},${longitude})`
+      `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
     );
 
-    const response = await axios.get(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m`
-    );
+    // TODO: Send email logic here
+   // const response = await axios.get();
 
-    const { temperature_2m, wind_speed_10m } = response.data.current;
-    const weatherEmoji = getWeatherEmoji(temperature_2m);
-
-    return {
-      text: `The current temperature in ${locationName} is ${temperature_2m}°C with wind speed of ${wind_speed_10m} km/h`,
+    return new DainResponse({
+      text: `Email sent to ${name} at ${email} for their appointment at ${appointmentTime}`,     // Message for the AI agent
       data: {
-        temperature: temperature_2m,
-        windSpeed: wind_speed_10m,
-      },
+        success: "Success",
+      },     // Structured data matching the output schema
       ui: new CardUIBuilder()
-        .setRenderMode("page")
-        .title(`Current Weather in ${locationName} ${weatherEmoji}`)
-        .addChild(
-          new MapUIBuilder()
-            .setInitialView(latitude, longitude, 10)
-            .setMapStyle("mapbox://styles/mapbox/streets-v12")
-            .addMarkers([
-              {
-                latitude,
-                longitude,
-                title: locationName,
-                description: `Temperature: ${temperature_2m}°C\nWind: ${wind_speed_10m} km/h`,
-                text: `${locationName} ${weatherEmoji}`,
-              },
-            ])
-            .build()
-        )
-        .content(
-          `Temperature: ${temperature_2m}°C\nWind Speed: ${wind_speed_10m} km/h`
-        )
-        .build(),
-    };
+      .title("Email Sent")
+      .content(`Reminder email sent to ${name} for appointment.`)
+      .build(),
+    });
   },
 };
 
-const getWeatherForecastConfig: ToolConfig = {
-  id: "get-weather-forecast",
-  name: "Get Weather Forecast",
-  description: "Fetches hourly weather forecast",
-  input: z
-    .object({
-      locationName: z.string().describe("Location name"),
-      latitude: z.number().describe("Latitude coordinate"),
-      longitude: z.number().describe("Longitude coordinate"),
-    })
-    .describe("Input parameters for the forecast request"),
-  output: z
-    .object({
-      times: z.array(z.string()).describe("Forecast times"),
-      temperatures: z
-        .array(z.number())
-        .describe("Temperature forecasts in Celsius"),
-      windSpeeds: z.array(z.number()).describe("Wind speed forecasts in km/h"),
-      humidity: z
-        .array(z.number())
-        .describe("Relative humidity forecasts in %"),
-    })
-    .describe("Hourly weather forecast"),
-  pricing: { pricePerUse: 0, currency: "USD" },
-  handler: async (
-    { locationName, latitude, longitude },
-    agentInfo,
-    context
-  ) => {
-    console.log(
-      `User / Agent ${agentInfo.id} requested forecast at ${locationName} (${latitude},${longitude})`
-    );
-
-    const response = await axios.get(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`
-    );
-
-    const { time, temperature_2m, wind_speed_10m, relative_humidity_2m } =
-      response.data.hourly;
-
-    // Limit to first 24 hours of forecast data
-    const limitedTime = time.slice(0, 24);
-    const limitedTemp = temperature_2m.slice(0, 24);
-    const limitedWind = wind_speed_10m.slice(0, 24);
-    const limitedHumidity = relative_humidity_2m.slice(0, 24);
-
-    const weatherEmoji = getWeatherEmoji(limitedTemp[0]);
-
-    return {
-      text: `Weather forecast for ${locationName} available for the next 24 hours`,
-      data: {
-        times: limitedTime,
-        temperatures: limitedTemp,
-        windSpeeds: limitedWind,
-        humidity: limitedHumidity,
-      },
-      ui: new LayoutUIBuilder()
-        .setRenderMode("page")
-        .setLayoutType("column")
-        .addChild(
-          new MapUIBuilder()
-            .setInitialView(latitude, longitude, 10)
-            .setMapStyle("mapbox://styles/mapbox/streets-v12")
-            .addMarkers([
-              {
-                latitude,
-                longitude,
-                title: locationName,
-                description: `Temperature: ${limitedTemp[0]}°C\nWind: ${limitedWind[0]} km/h`,
-                text: `${locationName} ${weatherEmoji}`,
-              },
-            ])
-            .build()
-        )
-        .addChild(
-          new TableUIBuilder()
-            .addColumns([
-              { key: "time", header: "Time", type: "string" },
-              {
-                key: "temperature",
-                header: "Temperature (°C)",
-                type: "number",
-              },
-              { key: "windSpeed", header: "Wind Speed (km/h)", type: "number" },
-              { key: "humidity", header: "Humidity (%)", type: "number" },
-            ])
-            .rows(
-              limitedTime.map((t: string, i: number) => ({
-                time: new Date(t).toLocaleString(),
-                temperature: limitedTemp[i],
-                windSpeed: limitedWind[i],
-                humidity: limitedHumidity[i],
-              }))
-            )
-            .build()
-        )
-        .build(),
-    };
-  },
+const userBehaviorContext: ServiceContext = {
+  id: "userBehavior",
+  name: "Usage Patterns",
+  description: "User interaction patterns",
+  getContextData: async () => {
+    return `User typically tells about all the patients they have for the day, 
+    then asks to send reminder emails to patients. Then they'll want a summary 
+    of how their patients are doing.`;
+  }
 };
 
 const dainService = defineDAINService({
   metadata: {
-    title: "Weather DAIN Service",
+    title: "Therapist Automation Service",
     description:
-      "A DAIN service for current weather and forecasts using Open-Meteo API",
+      "A DAIN service to provide therapists with workflow automations",
     version: "1.0.0",
-    author: "Your Name",
-    tags: ["weather", "forecast", "dain"],
-    logo: "https://cdn-icons-png.flaticon.com/512/252/252035.png",
+    author: "Cheryl Wu, Sean Chan, Carissa Ott, Michelle Liu",
+    tags: ["Therapy", "Automation", "Summary"],
+    logo: "https://cdn-icons-png.flaticon.com/512/252/252035.png", // TODO: Update the logo URL
   },
   exampleQueries: [
     {
-      category: "Weather",
+      category: "Therapy",
       queries: [
-        "What is the weather in Tokyo?",
-        "What is the weather in San Francisco?",
-        "What is the weather in London?",
+        "What can this service do?",
+        "Please send my patients a reminder email for their next appointment",
+        "Please give me a summary of how my patients are doing",
+        "Please connect me to the Google Calendar API and get my patient schedule for the day",
       ],
     },
   ],
   identity: {
     apiKey: process.env.DAIN_API_KEY,
   },
-  tools: [getWeatherConfig, getWeatherForecastConfig],
+  tools: [emailConfig],
+  contexts: [userBehaviorContext],
 });
 
 dainService.startNode().then(({ address }) => {
-  console.log("Weather DAIN Service is running at :" + address().port);
+  console.log("TheraMind Service is running at :" + address().port);
 });
