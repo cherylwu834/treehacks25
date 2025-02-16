@@ -206,12 +206,53 @@ const patientSummaryConfig: ToolConfig = {
       .description("Mood score fluctuations over time for Helen") // Optional description
       .build();
 
+
+      // Sample data (Replace this with the data you extract from your CSV)
+      const categoryProportions = {
+        work: 0.14285714285714285,
+        family: 0.0,
+        friends: 0.0,
+        stress: 0.0,
+        hobbies: 0.2857142857142857,
+      };
+      
+      // Filter out categories with 0% contribution
+      const filteredCategories = Object.fromEntries(
+        Object.entries(categoryProportions).filter(([_, value]) => value > 0)
+      );
+      
+      // Find the largest category to highlight
+      const largestCategory = Object.keys(filteredCategories).reduce((a, b) =>
+        filteredCategories[a] > filteredCategories[b] ? a : b
+      );
+      
+      // Set chart colors to highlight the largest category
+      const chartColors = Object.keys(filteredCategories).map(
+        category => (category === largestCategory ? '#ff6666' : '#99ff99') // Highlight the largest category
+      );
+      
+      // Build the pie chart with ChartUI
+      const chartUI2 = new ChartUIBuilder()
+        .type('pie')  // Set the chart type to 'pie'
+        .title('Category Proportions for Helen Wong')  // Set the chart title
+        .chartData(
+          Object.entries(filteredCategories).map(([category, proportion]) => ({
+            category,
+            proportion,
+            color: category === largestCategory ? '#ff6666' : '#99ff99'
+          }))
+        )
+        .dataKeys({ x: 'category', y: 'proportion' })  // Set the data keys for categories and proportions
+        .description('Mood category contributions for Helen Wong')  // Optional description
+        .build();
+      
+
     return new DainResponse({
       text: `Highlights of previous interactions and survey on ${name} and give suggestions on things to touch on during the session`,     // Message for the AI agent
       data: {
         summary: response,
       },
-      ui: chartUI,
+      ui: chartUI2,
     });
   },
 };
