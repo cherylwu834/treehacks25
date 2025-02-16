@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "chart.js": "^4.4.7",
+    "date-fns": "^4.1.0"
+  }
+}

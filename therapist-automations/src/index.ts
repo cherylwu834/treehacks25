@@ -128,18 +128,41 @@ const patientSummaryConfig: ToolConfig = {
     });
 
     // TODO: Graphs
+    // Assuming you have a `ChartUIBuilder` that follows a similar pattern to the one you showed
+
+    // Sample data structure based on your mood data
+    const moodData = [
+      { name: 'Renee Wong', date: '1/1/24', mood_score: 9 },
+      { name: 'Renee Wong', date: '1/2/24', mood_score: 3 },
+      { name: 'Renee Wong', date: '1/3/24', mood_score: 7 },
+      { name: 'Renee Wong', date: '1/4/24', mood_score: 5 },
+      { name: 'Renee Wong', date: '1/5/24', mood_score: 9 },
+      { name: 'Renee Wong', date: '1/6/24', mood_score: 4 },
+      { name: 'Renee Wong', date: '1/7/24', mood_score: 8 },
+    ];
+
+    // Filter data for one person (e.g., 'Renee Wong')
+    const filteredData = moodData.filter(item => item.name === 'Renee Wong').map(item => ({
+      date: item.date,
+      mood_score: item.mood_score
+    }));
+
+    // Prepare chart data (extract dates and mood scores)
+    const chartData = filteredData.map(item => ({
+      date: item.date,
+      mood_score: item.mood_score
+    }));
+
+    // Build the chart with ChartUIBuilder
     const chartUI = new ChartUIBuilder()
-      .type("bar")           // Mandatory: 'bar' | 'line' | 'pie'
-      .title("Monthly Sales") // Mandatory
-      .chartData([           // Mandatory
-        { month: "Jan", sales: 4000 },
-        { month: "Feb", sales: 3000 }
-      ])
-      .dataKeys({            // Mandatory
-        x: "month",
-        y: "sales"
+      .type("line")  // Change to 'line' for the mood score graph
+      .title("Helen's Mood Over The Past Week") // Title of the chart
+      .chartData(chartData)  // Provide the prepared chart data
+      .dataKeys({             // Define which keys represent the x and y axes
+        x: "date",            // X-axis will be the date
+        y: "mood_score"       // Y-axis will be the mood score
       })
-      .description("Sales performance over time") // Optional
+      .description("Mood score fluctuations over time for Helen") // Optional description
       .build();
 
     return new DainResponse({
