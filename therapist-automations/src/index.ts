@@ -124,27 +124,19 @@ const emailConfig: ToolConfig = {
   },
 };
 
-const patientSummaryConfig: ToolConfig = {
+const allPatientSummaryConfig: ToolConfig = {
   id: "summarize-patient-information",
   name: "Summarize Patient Information",
-  description: "Summarizes the information of a patient for a therapist. Use to get visualizations of the check-in survey and summary of previous appointments.",
+  description: "Summarizes the information of alls patient that a therapist has.",
   input: z
-    .object({
-      // name: z.string().describe("Patient's name"),
-      // patientInformation: z.string().describe("Notes on the patient's previous session"),
-    })
-    .describe("Input parameters for the patient summary request"),
+    .object({}),
   output: z
     .object({
       summary: z.string().describe("Summary of the patient's information and recommendataions for talking points")
     })
     .describe("Summary of the patient's information"),
-  handler: async ({ name, patientInformation }, agentInfo, context) => {
-    console.log(
-      `Summarizing information for ${name}`
-    );
+  handler: async ({ }, agentInfo, context) => {
 
-    // TODO: Carissa's summarizing logic here
     // Path to the Python script    
     const command = "python3 main.py";
 
@@ -168,8 +160,37 @@ const patientSummaryConfig: ToolConfig = {
       });
     });
 
-    // TODO: Graphs
-    // Assuming you have a `ChartUIBuilder` that follows a similar pattern to the one you showed
+    return new DainResponse({
+      text: `Highlights of previous interactions and give suggestions on things to touch on during the session`,     // Message for the AI agent
+      data: {
+        summary: response,
+      },
+      ui: undefined,
+    });
+  },
+};
+
+
+
+const patientSummaryConfig: ToolConfig = {
+  id: "patient-information",
+  name: "Patient Information",
+  description: "More in depth summary of information on a patient. Use to get visualizations of the check-in survey and summary of previous appointments.",
+  input: z
+    .object({
+      name: z.string().describe("Patient's name"),
+      // patientInformation: z.string().describe("Notes on the patient's previous session"),
+    })
+    .describe("Input parameters for the patient summary request"),
+  output: z
+    .object({
+      // summary: z.string().describe("Summary of the patient's information and recommendataions for talking points")
+    })
+    .describe("Summary of the patient's information"),
+  handler: async ({ name }, agentInfo, context) => {
+    console.log(
+      `Summarizing information for ${name}`
+    );
 
     // Sample data structure based on your mood data
     const moodData = [
@@ -208,9 +229,7 @@ const patientSummaryConfig: ToolConfig = {
 
     return new DainResponse({
       text: `Highlights of previous interactions and survey on ${name} and give suggestions on things to touch on during the session`,     // Message for the AI agent
-      data: {
-        summary: response,
-      },
+      data: { },
       ui: chartUI,
     });
   },
@@ -244,6 +263,7 @@ const dainService = defineDAINService({
         "What appointments do I have tomorrow?",
         "Please send my patients a reminder email for their next appointment",
         "Please give me a summary of how my patients are doing",
+        "Give me an in depth analysis on one of my patients",
         // "Please connect me to the Google Calendar API and get my patient schedule for the day",
       ],
     },
@@ -251,7 +271,7 @@ const dainService = defineDAINService({
   identity: {
     apiKey: process.env.DAIN_API_KEY,
   },
-  tools: [apptConfig, emailConfig, patientSummaryConfig],
+  tools: [apptConfig, emailConfig, allPatientSummaryConfig, patientSummaryConfig],
   contexts: [userBehaviorContext],
 });
 
