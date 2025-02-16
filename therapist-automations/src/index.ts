@@ -194,13 +194,13 @@ const patientSummaryConfig: ToolConfig = {
 
     // Sample data structure based on your mood data
     const moodData = [
-      { name: 'Renee Wong', date: '1/1/24', mood_score: 9 },
-      { name: 'Renee Wong', date: '1/2/24', mood_score: 3 },
-      { name: 'Renee Wong', date: '1/3/24', mood_score: 7 },
-      { name: 'Renee Wong', date: '1/4/24', mood_score: 5 },
-      { name: 'Renee Wong', date: '1/5/24', mood_score: 9 },
-      { name: 'Renee Wong', date: '1/6/24', mood_score: 4 },
-      { name: 'Renee Wong', date: '1/7/24', mood_score: 8 },
+      { name: 'Helen Wong', date: '1/1/24', mood_score: 9 },
+      { name: 'Helen Wong', date: '1/2/24', mood_score: 3 },
+      { name: 'Helen Wong', date: '1/3/24', mood_score: 1 },
+      { name: 'Helen Wong', date: '1/4/24', mood_score: 5 },
+      { name: 'Helen Wong', date: '1/5/24', mood_score: 7 },
+      { name: 'Helen Wong', date: '1/6/24', mood_score: 4 },
+      { name: 'Helen Wong', date: '1/7/24', mood_score: 1 },
     ];
 
     // Filter data for one person (e.g., 'Renee Wong')
