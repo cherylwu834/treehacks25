@@ -35,7 +35,7 @@ const emailService = new DainServiceConnection(
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
   name: "Send Appointment Reminder Email",
-  description: "Sends an appointment reminder email to a patient.", // TODO: Write Better Description
+  description: "Sends an appointment reminder email to a patient. Use when a patient has an upcoming appointment.", // TODO: Write Better Description
   input: z
     .object({
       name: z.string().describe("Patient's name"),
@@ -58,13 +58,13 @@ const emailConfig: ToolConfig = {
       fromName: "TheraMind" as string,
       to: [email] as Array<string>,
       subject: `Appointment Reminder for ${name}` as string,
-      html: `Hi ${name}, <br> This is a reminder that you have an appointment at ${appointmentTime}. <br> Best, <br> TheraMind` as string,
+      html: `Hi ${name}, <br><br> This is a reminder that you have an appointment at ${appointmentTime}. <br><br> Best, <br> TheraMind` as string,
     });
 
     // Extract the results from the response
     const { data, ui } = response;
 
-    console.log(response);
+    // console.log(response);
 
 
     return new DainResponse({
