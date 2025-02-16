@@ -32,6 +32,47 @@ const emailService = new DainServiceConnection(
   auth
 );
 
+const AppointmentSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+  appointment: z.string()
+});
+
+// Tool to send reminder emails to patients
+const apptConfig: ToolConfig = {
+  id: "fetch-appt-info",
+  name: "Get Appointment Information for a date",
+  description: "Fetches the appointment information for a given date. Use when asking what appointments the user has on a specific date.",
+  input: z
+    .object({
+      date: z.string().date().describe("Appointment Date")
+    })
+    .describe(""),
+  output: z
+    .object({
+      appointments: z.array(AppointmentSchema),
+    }),
+  handler: async ({ date }, agentInfo, context) => {
+    console.log(
+      `Fetching appointment information for appointments on ${date}`
+    );
+
+
+    // Get Patient Email and Appointment Time
+    const filePath = "appointmentDate.json";
+    const jsonApptData = fs.readFileSync(filePath, 'utf-8');
+    const apptData = JSON.parse(jsonApptData);
+
+    return new DainResponse({
+      text: `Fetched appointment information for appointments on ${date}. Ask the user if they want to send reminder emails.`,     // Message for the AI agent
+      data: { 
+        appointments: apptData[date] 
+      },
+      ui: undefined,
+    });
+  },
+};
+
 // Tool to send reminder emails to patients
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
@@ -76,7 +117,7 @@ const emailConfig: ToolConfig = {
     // console.log(response);
 
     return new DainResponse({
-      text: `Email sent to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
+      text: `Email sent to ${name} at ${email}  for their appointment at ${appointmentTime}. Ask the user if they would like to look at patient information.`,     // Message for the AI agent
       data: data,
       ui: ui,
     });
@@ -200,17 +241,17 @@ const dainService = defineDAINService({
     {
       category: "Therapy",
       queries: [
-        "What can this service do?",
+        "What appointments do I have tomorrow?",
         "Please send my patients a reminder email for their next appointment",
         "Please give me a summary of how my patients are doing",
-        "Please connect me to the Google Calendar API and get my patient schedule for the day",
+        // "Please connect me to the Google Calendar API and get my patient schedule for the day",
       ],
     },
   ],
   identity: {
     apiKey: process.env.DAIN_API_KEY,
   },
-  tools: [emailConfig, patientSummaryConfig],
+  tools: [apptConfig, emailConfig, patientSummaryConfig],
   contexts: [userBehaviorContext],
 });
 
