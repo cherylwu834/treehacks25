@@ -12,6 +12,7 @@ import {
   ChartUIBuilder,
 } from "@dainprotocol/utils";
 
+
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
   name: "Send Appointment Reminder Email",
@@ -25,7 +26,7 @@ const emailConfig: ToolConfig = {
     .describe("Input parameters for the appointment reminder email request"),
   output: z
     .object({
-      success: z.string().describe("Success the email successfully sent, Failed if not"),
+      emailRequest: z.string().describe("Content for the email request"),
     })
     .describe("Email sending status"),
   handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
@@ -37,14 +38,11 @@ const emailConfig: ToolConfig = {
    // const response = await axios.get();
 
     return new DainResponse({
-      text: `Email sent to ${name} at ${email} for their appointment at ${appointmentTime}`,     // Message for the AI agent
+      text: `Please connect to the Gmail service and invoke the Gmail Send Email tool to send email to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
       data: {
-        success: "Success",
+        emailRequest: "Success",
       },     // Structured data matching the output schema
-      ui: new CardUIBuilder()
-      .title("Email Sent")
-      .content(`Reminder email sent to ${name} for appointment.`)
-      .build(),
+      ui: undefined,
     });
   },
 };
@@ -88,7 +86,7 @@ const patientSummaryConfig: ToolConfig = {
       .build();
 
     return new DainResponse({
-      text: `Highlights of previous interactions and survey on ${name}`,     // Message for the AI agent
+      text: `Highlights of previous interactions and survey on ${name} and give suggestions on things to touch on during the session`,     // Message for the AI agent
       data: {
         summary: response,
       },
@@ -139,3 +137,40 @@ const dainService = defineDAINService({
 dainService.startNode().then(({ address }) => {
   console.log("TheraMind Service is running at :" + address().port);
 });
+
+// const emailConfig: ToolConfig = {
+//   id: "send-reminder-email",
+//   name: "Send Appointment Reminder Email",
+//   description: "Sends an appointment reminder email to a patient.", // TODO: Write Better Description
+//   input: z
+//     .object({
+//       name: z.string().describe("Patient's name"),
+//       email: z.string().email().describe("Patient's email address"),
+//       appointmentTime: z.string().datetime().describe("Appointment Date and Time"),
+//     })
+//     .describe("Input parameters for the appointment reminder email request"),
+//   output: z
+//     .object({
+//       success: z.string().describe("Success the email successfully sent, Failed if not"),
+//     })
+//     .describe("Email sending status"),
+//   handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
+//     console.log(
+//       `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
+//     );
+
+//     // TODO: Send email logic here
+//    // const response = await axios.get();
+
+//     return new DainResponse({
+//       text: `Email sent to ${name} at ${email} for their appointment at ${appointmentTime}`,     // Message for the AI agent
+//       data: {
+//         success: "Success",
+//       },     // Structured data matching the output schema
+//       ui: new CardUIBuilder()
+//       .title("Email Sent")
+//       .content(`Reminder email sent to ${name} for appointment.`)
+//       .build(),
+//     });
+//   },
+// };
