@@ -75,7 +75,6 @@ const emailConfig: ToolConfig = {
 
     // console.log(response);
 
-
     return new DainResponse({
       text: `Email sent to ${name} at ${email}  for their appointment at ${appointmentTime}`,     // Message for the AI agent
       data: data,
@@ -105,10 +104,7 @@ const patientSummaryConfig: ToolConfig = {
     );
 
     // TODO: Carissa's summarizing logic here
-    // Path to the Python script
-    const pythonScriptPath = 'test.py';
-    
-    // You may want to pass the patient information to the Python script
+    // Path to the Python script    
     const command = "python3 main.py";
 
     // Run the Python script to get the summary
