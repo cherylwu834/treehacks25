@@ -83,7 +83,7 @@ def main():
             model=model,
             tools=tools,
             system=UBUNTU_SYSTEM_PROMPT,
-            prompt="Go to https://drive.google.com/file/d/1jzMkVDYo3097MFXO6oblPDOvPm91zHfF/view?usp=sharing. Extract the patient data for each patient in structured JSON format with patientID, moodScore (scale of 1-10), and feelings. Please save the entirety of the journal entry in the feelings column.",
+            prompt="Go to https://drive.google.com/file/d/1jzMkVDYo3097MFXO6oblPDOvPm91zHfF/view?usp=sharing. Extract the patient data for all 5 patients in structured JSON format with patientID, moodScore (scale of 1-10), and feelings. Please save the entirety of the journal entry in the feelings column.",
             schema=Patient,
             on_step=lambda step: handle_step(step, step_logs),
         )
