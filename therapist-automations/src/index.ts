@@ -1,13 +1,13 @@
 import { z } from "zod";
 import axios from "axios";
 import { exec } from 'child_process';
+import * as fs from 'fs';
 
 import { defineDAINService, ToolConfig, ServiceContext } from "@dainprotocol/service-sdk";
 import {
   DainClientAuth,
   DainServiceConnection,
 } from "@dainprotocol/service-sdk/client";
-import fs from "fs";
 
 import {
   DainResponse,
@@ -40,8 +40,8 @@ const emailConfig: ToolConfig = {
   input: z
     .object({
       name: z.string().describe("Patient's name"),
-      email: z.string().email().describe("Patient's email address"),
-      appointmentTime: z.string().datetime().describe("Appointment Date and Time"),
+      // email: z.string().email().describe("Patient's email address"),
+      // appointmentTime: z.string().datetime().describe("Appointment Date and Time"),
     })
     .describe("Input parameters for the appointment reminder email request"),
   output: z
@@ -49,7 +49,15 @@ const emailConfig: ToolConfig = {
       id: z.string(),
       success: z.boolean(),
     }),
-  handler: async ({ name, email, appointmentTime }, agentInfo, context) => {
+  handler: async ({ name }, agentInfo, context) => {
+
+    // Get Patient Email and Appointment Time
+    const filePath = "emails.json";
+    const jsonEmailData = fs.readFileSync(filePath, 'utf-8');
+    const emailData = JSON.parse(jsonEmailData);
+    const email = emailData[name]['email'];
+    const appointmentTime = emailData[name]['appointment'];
+
     console.log(
       `Sending email to ${name} at ${email}  for their appointment at ${appointmentTime}`
     );
@@ -82,7 +90,7 @@ const patientSummaryConfig: ToolConfig = {
   description: "Summarizes the information of a patient for a therapist. Use to get visualizations of the check-in survey and summary of previous appointments.",
   input: z
     .object({
-      name: z.string().describe("Patient's name"),
+      // name: z.string().describe("Patient's name"),
       // patientInformation: z.string().describe("Notes on the patient's previous session"),
     })
     .describe("Input parameters for the patient summary request"),
@@ -167,7 +175,7 @@ const dainService = defineDAINService({
     version: "1.0.0",
     author: "Cheryl Wu, Sean Chan, Carissa Ott, Michelle Liu",
     tags: ["Therapy", "Automation", "Summary"],
-    logo: "https://i.imgur.com/iTMCXIa.png", // TODO: Update the logo URL
+    logo: "https://i.imgur.com/iTMCXIa.png",
   },
   exampleQueries: [
     {
