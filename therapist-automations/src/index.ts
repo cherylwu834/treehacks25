@@ -1,5 +1,6 @@
 import { z } from "zod";
 import axios from "axios";
+import { exec } from 'child_process';
 
 import { defineDAINService, ToolConfig, ServiceContext } from "@dainprotocol/service-sdk";
 import {
@@ -18,20 +19,20 @@ import {
 } from "@dainprotocol/utils";
 
 
-// Initialize DAIN client to connect to the web search service
+// Initialize DAIN client to connect to the email service
 const auth = new DainClientAuth({
   apiKey: process.env.DAIN_API_KEY!,
 });
 
-//initialize a connection to the web search service
+//initialize a connection to the email service
 const serviceUrl = "https://hammerhead-app-n9cx5.ondigitalocean.app";
 
 const emailService = new DainServiceConnection(
-  serviceUrl, // this is the url of the web search service
+  serviceUrl, // this is the url of the email service
   auth
 );
 
-
+// Tool to send reminder emails to patients
 const emailConfig: ToolConfig = {
   id: "send-reminder-email",
   name: "Send Appointment Reminder Email",
@@ -82,7 +83,7 @@ const patientSummaryConfig: ToolConfig = {
   input: z
     .object({
       name: z.string().describe("Patient's name"),
-      patientInformation: z.string().describe("Notes on the patient's previous session"),
+      // patientInformation: z.string().describe("Notes on the patient's previous session"),
     })
     .describe("Input parameters for the patient summary request"),
   output: z
@@ -92,11 +93,35 @@ const patientSummaryConfig: ToolConfig = {
     .describe("Summary of the patient's information"),
   handler: async ({ name, patientInformation }, agentInfo, context) => {
     console.log(
-      `Summarizing information for ${name}. The information passed in is: ${patientInformation}`
+      `Summarizing information for ${name}`
     );
 
     // TODO: Carissa's summarizing logic here
-    const response = "[Placeholder Summary of patient's information]"
+    // Path to the Python script
+    const pythonScriptPath = 'main.py';
+    
+    // You may want to pass the patient information to the Python script
+    const command = `poetry run python ${pythonScriptPath}`;
+
+    // Run the Python script to get the summary
+    const response = await new Promise<string>((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing Python script: ${error.message}`);
+          reject(error);
+          return;
+        }
+        if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          reject(stderr);
+          return;
+        }
+        
+        // Assuming the Python script writes the summary to stdout
+        console.log(`Python script output: ${stdout}`);
+        resolve(stdout.trim());  // Return the summary
+      });
+    });
 
     // TODO: Graphs
     const chartUI = new ChartUIBuilder()
