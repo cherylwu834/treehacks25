@@ -63,6 +63,7 @@ const apptConfig: ToolConfig = {
     const jsonApptData = fs.readFileSync(filePath, 'utf-8');
     const apptData = JSON.parse(jsonApptData);
 
+
     return new DainResponse({
       text: `Fetched appointment information for appointments on ${date}. Ask the user if they want to send reminder emails.`,     // Message for the AI agent
       data: { 
@@ -171,7 +172,168 @@ const allPatientSummaryConfig: ToolConfig = {
 };
 
 
+const patientHistoryConfig: ToolConfig = {
+  id: "patient-history",
+  name: "Patient History",
+  description: "Historical data of patient. Use to get visualizations of all previous appointments and detailed statistics.",
+  input: z
+    .object({
+      name: z.string().describe("Patient's name"),
+      // patientInformation: z.string().describe("Notes on the patient's previous session"),
+    })
+    .describe("Input parameters for the patient summary request"),
+  output: z
+    .object({
+      // summary: z.string().describe("Summary of the patient's information and recommendataions for talking points")
+    })
+    .describe("History of patient's past history"),
+  handler: async ({ name }, agentInfo, context) => {
+    console.log(
+      `Getting history for information for ${name}`
+    );
 
+    // read in JSON file data
+    const filePath2 = 'survey.json';
+    const jsonData = fs.readFileSync(filePath2, 'utf8');
+    const surveyData = JSON.parse(jsonData);
+    console.log(surveyData);
+
+    // Filter data for one person (e.g., 'Renee Wong')
+    const filteredData = surveyData.filter(item => item.name === 'Helen Wong').map(item => ({
+      date: item.date,
+      mood_score: item.mood_score,
+      therapist_score: item.therapist_score,
+      irritability: item.irritability,
+      depression: item.depression,
+      anxiety: item.anxiety,
+      sleep_quality: item.sleep_quality,
+      interest_hobbies: item.interest_hobbies
+    }));
+
+    // Prepare chart data (extract dates and mood scores)
+    const chartData = filteredData.map(item => ({
+      date: item.date,
+      mood_score: item.mood_score
+    }));
+
+    // Build the chart with ChartUIBuilder
+    const chartUI = new ChartUIBuilder()
+      .type("line")  // Change to 'line' for the mood score graph
+      .title("Helen's Mood Over The Past Week") // Title of the chart
+      .chartData(chartData)  // Provide the prepared chart data
+      .dataKeys({             // Define which keys represent the x and y axes
+        x: "date",            // X-axis will be the date
+        y: "mood_score"       // Y-axis will be the mood score
+      })
+      .description("Mood score fluctuations over time for Helen") // Optional description
+      .build();
+
+
+    // NEW CHARTS
+    // Prepare chart data for each metric
+    const therapistScoreData = filteredData.map(item => ({
+      date: item.date,
+      therapist_score: item.therapist_score
+    }));
+
+    const irritabilityData = filteredData.map(item => ({
+      date: item.date,
+      irritability: item.irritability
+    }));
+
+    const depressionData = filteredData.map(item => ({
+      date: item.date,
+      depression: item.depression
+    }));
+
+    const anxietyData = filteredData.map(item => ({
+      date: item.date,
+      anxiety: item.anxiety
+    }));
+
+    const sleepQualityData = filteredData.map(item => ({
+      date: item.date,
+      sleep_quality: item.sleep_quality
+    }));
+
+    const interestHobbiesData = filteredData.map(item => ({
+      date: item.date,
+      interest_hobbies: item.interest_hobbies
+    }));
+
+    // Build the charts
+    const therapistScoreChart = new ChartUIBuilder()
+      .type("line")
+      .title("Patient Care Satisfaction Over Time")
+      .chartData(therapistScoreData)
+      .dataKeys({ x: "date", y: "therapist_score" })
+      .description("Patient's rating of their satisfaction over time.")
+      .build();
+
+    const irritabilityChart = new ChartUIBuilder()
+      .type("line")
+      .title("Irritability Score Over Time")
+      .chartData(irritabilityData)
+      .dataKeys({ x: "date", y: "irritability" })
+      .description("Irritability trends over time.")
+      .build();
+
+    const depressionChart = new ChartUIBuilder()
+      .type("line")
+      .title("Depression Score Over Time")
+      .chartData(depressionData)
+      .dataKeys({ x: "date", y: "depression" })
+      .description("Depression score fluctuations over time.")
+      .build();
+
+    const anxietyChart = new ChartUIBuilder()
+      .type("line")
+      .title("Anxiety Score Over Time")
+      .chartData(anxietyData)
+      .dataKeys({ x: "date", y: "anxiety" })
+      .description("Anxiety trends over time.")
+      .build();
+
+    const sleepQualityChart = new ChartUIBuilder()
+      .type("line")
+      .title("Sleep Quality Score Over Time")
+      .chartData(sleepQualityData)
+      .dataKeys({ x: "date", y: "sleep_quality" })
+      .description("Sleep quality changes over time.")
+      .build();
+
+    const interestHobbiesChart = new ChartUIBuilder()
+      .type("line")
+      .title("Interest in Hobbies Over Time")
+      .chartData(interestHobbiesData)
+      .dataKeys({ x: "date", y: "interest_hobbies" })
+      .description("Changes in interest in hobbies over time.")
+      .build();
+
+    // compose the charts
+    const dashboardUI = new CardUIBuilder()
+    .title("Historical Data Dashboard")
+    .addChild(chartUI)
+    .addChild(therapistScoreChart)
+    .addChild(irritabilityChart)
+    .addChild(depressionChart)
+    .addChild(anxietyChart)
+    .addChild(sleepQualityChart)
+    .addChild(interestHobbiesChart)
+
+    .build();
+
+
+    return new DainResponse({
+      text: `Highlights of previous interactions and survey on ${name} and give suggestions on things to touch on during the session`,     // Message for the AI agent
+      data: { },
+      ui: dashboardUI
+    });
+  },
+};
+
+
+    
 const patientSummaryConfig: ToolConfig = {
   id: "patient-information",
   name: "Patient Information",
@@ -305,6 +467,7 @@ const dainService = defineDAINService({
         "Please send my patients a reminder email for their next appointment",
         "Please give me a summary of how my patients are doing",
         "Give me an in depth analysis on one of my patients",
+        "Give me historical data on one of my patients"
         // "Please connect me to the Google Calendar API and get my patient schedule for the day",
       ],
     },
@@ -312,7 +475,8 @@ const dainService = defineDAINService({
   identity: {
     apiKey: process.env.DAIN_API_KEY,
   },
-  tools: [apptConfig, emailConfig, allPatientSummaryConfig, patientSummaryConfig],
+  tools: [apptConfig, emailConfig, allPatientSummaryConfig, patientSummaryConfig, patientHistoryConfig],
+  // tools: [apptConfig, emailConfig, allPatientSummaryConfig, patientHistoryConfig],
   contexts: [userBehaviorContext],
 });
 
